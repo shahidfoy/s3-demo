@@ -3,7 +3,7 @@ package com.shahidfoy.s3_demo.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.EnableRetry;
 
-@Configuration
 @EnableRetry
+@Configuration
 public class RetryConfig {
 }
