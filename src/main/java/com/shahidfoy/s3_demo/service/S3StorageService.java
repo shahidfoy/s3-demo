@@ -64,4 +64,16 @@ public interface S3StorageService {
             backoff = @Backoff(delay = 2000)
     )
     void makeFilePublic(String bucket, String fileName);
+
+    /**
+     * makes the file private
+     * @param bucket bucket path
+     * @param fileName file name
+     */
+    @Retryable(
+            retryFor = { S3Exception.class, Exception.class },
+            maxAttempts = 10,
+            backoff = @Backoff(delay = 2000)
+    )
+    public void makeFilePrivate(String bucket, String fileName);
 }

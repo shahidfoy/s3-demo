@@ -9,6 +9,7 @@ The following environment variables will need to be configured in `application.y
 to get the environment variables.
 
 - S3_BUCKET_NAME
+- S3_CDN_ENDPOINT
 - S3_ENDPOINT
 - S3_REGION
 - S3_ACCESS_KEY

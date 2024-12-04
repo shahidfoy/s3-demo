@@ -7,6 +7,7 @@ import com.shahidfoy.s3_demo.service.S3StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,8 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping(path = {"/api/s3bucket"})
 public class S3Controller {
 
+    @Value("${storage.s3.cdn-endpoint}")
+    private String STORAGE_S3_CDN_ENDPOINT;
     @Value("${storage.s3.endpoint}")
     private String STORAGE_S3_ENDPOINT;
     @Value("${storage.s3.bucket-name}")
@@ -29,18 +32,17 @@ public class S3Controller {
 
     private final S3StorageService service;
 
-    @PostMapping("/save-file")
-    public ResponseEntity<S3Response> saveFile(
-            @RequestBody S3Request s3Request,
-            MultipartFile file) throws IOException {
+    @PostMapping(value = "/save-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<S3Response> saveFile(MultipartFile file) throws IOException {
 
-        if (file == null || file.isEmpty()) {
+        String fileName = file.getOriginalFilename();
+        String contentType = file.getContentType();
+
+        if (file.isEmpty())
             throw new IOException("The provided file is empty or null.");
-        }
-        this.service.saveFileToBucket(
-                STORAGE_S3_BUCKET, s3Request.getFileName(), s3Request.getContentType(), file.getBytes());
+        this.service.saveFileToBucket(STORAGE_S3_BUCKET, fileName, contentType, file.getBytes());
 
-        String bucketUrl = STORAGE_S3_ENDPOINT + "/" + STORAGE_S3_BUCKET + "/" + s3Request.getFileName();
+        String bucketUrl = STORAGE_S3_CDN_ENDPOINT + "/" + STORAGE_S3_BUCKET + "/" + fileName;
         return new ResponseEntity<>(new S3Response(bucketUrl), OK);
     }
 
@@ -55,7 +57,7 @@ public class S3Controller {
     @GetMapping("/get-file-url/{fileName}")
     public ResponseEntity<S3Response> getFileUrl(@PathVariable String fileName) {
 
-        String bucketUrl = STORAGE_S3_ENDPOINT + "/" + STORAGE_S3_BUCKET + "/" + fileName;
+        String bucketUrl = STORAGE_S3_CDN_ENDPOINT + "/" + STORAGE_S3_BUCKET + "/" + fileName;
         return new ResponseEntity<>(new S3Response(bucketUrl), OK);
     }
 
@@ -80,6 +82,13 @@ public class S3Controller {
 
         this.service.makeFilePublic(STORAGE_S3_BUCKET, fileName);
         return new ResponseEntity<>(new S3Response("File made public"), OK);
+    }
+
+    @PatchMapping("/make-file-private/{fileName}")
+    public ResponseEntity<S3Response> makeFilePrivate(@PathVariable String fileName) {
+
+        this.service.makeFilePrivate(STORAGE_S3_BUCKET, fileName);
+        return new ResponseEntity<>(new S3Response("File made private"), OK);
     }
 
     @PostMapping("/get-temp-s3-url")

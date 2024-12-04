@@ -145,4 +145,31 @@ public class S3Service implements S3StorageService {
             throw ex;
         }
     }
+
+    @Override
+    public void makeFilePrivate(String bucket, String fileName) {
+        log.debug("makeFilePrivate: {}", fileName);
+        log.debug("= bucket: {}", bucket);
+        try {
+            // Create a PutObjectAclRequest to set the object to PRIVATE
+            PutObjectAclRequest putObjectAclRequest = PutObjectAclRequest.builder()
+                    .bucket(bucket)
+                    .key(fileName)
+                    .acl(ObjectCannedACL.PRIVATE)  // Set the ACL to private
+                    .build();
+
+            // Set the object ACL
+            s3Client.putObjectAcl(putObjectAclRequest);
+            log.debug("File has been made private.");
+        }
+        catch (S3Exception e) {
+            log.error("Error setting file to private:");
+            log.error(e.awsErrorDetails().errorMessage());
+            throw e;
+        } catch (Exception ex) {
+            log.error("Exception Error setting file to private:");
+            log.error(ex.getMessage());
+            throw ex;
+        }
+    }
 }
